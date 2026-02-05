@@ -3,11 +3,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 import prompts from 'prompts';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';
 
@@ -23,27 +19,22 @@ function detectPackageManager(): PackageManager {
   return 'npm';
 }
 
-function getInstallCommand(pm: PackageManager): string {
+function getInitCommand(pm: PackageManager): string {
   switch (pm) {
-    case 'yarn': return 'yarn';
-    case 'pnpm': return 'pnpm install';
-    case 'bun': return 'bun install';
-    default: return 'npm install';
+    case 'yarn': return 'yarn init -y';
+    case 'pnpm': return 'pnpm init';
+    case 'bun': return 'bun init -y';
+    default: return 'npm init -y';
   }
 }
 
-function copyDir(src: string, dest: string): void {
-  fs.mkdirSync(dest, { recursive: true });
-
-  for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
-
-    if (entry.isDirectory()) {
-      copyDir(srcPath, destPath);
-    } else {
-      fs.copyFileSync(srcPath, destPath);
-    }
+function getAddCommand(pm: PackageManager, deps: string[]): string {
+  const depsStr = deps.join(' ');
+  switch (pm) {
+    case 'yarn': return `yarn add ${depsStr}`;
+    case 'pnpm': return `pnpm add ${depsStr}`;
+    case 'bun': return `bun add ${depsStr}`;
+    default: return `npm install ${depsStr}`;
   }
 }
 
@@ -55,6 +46,26 @@ function toValidPackageName(name: string): string {
     .replace(/^[._]/, '')
     .replace(/[^a-z0-9-~]+/g, '-');
 }
+
+const tsconfig = {
+  compilerOptions: {
+    module: 'es2022',
+    target: 'esnext',
+    moduleResolution: 'bundler',
+    types: ['node'],
+    sourceMap: true,
+    declaration: true,
+    declarationMap: true,
+    noUncheckedIndexedAccess: true,
+    exactOptionalPropertyTypes: true,
+    strict: true,
+    verbatimModuleSyntax: true,
+    isolatedModules: true,
+    noUncheckedSideEffectImports: true,
+    moduleDetection: 'force',
+    skipLibCheck: true,
+  },
+};
 
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
@@ -100,45 +111,62 @@ async function main(): Promise<void> {
         fs.rmSync(path.join(root, file), { recursive: true, force: true });
       }
     }
+  } else {
+    fs.mkdirSync(root, { recursive: true });
   }
+
+  const pm = detectPackageManager();
 
   console.log(`\nScaffolding project in ${root}...`);
 
-  // Copy template files
-  const templateDir = path.resolve(__dirname, '..', 'template');
-  copyDir(templateDir, root);
+  // Initialize package.json
+  console.log(`\nInitializing project with ${pm}...`);
+  execSync(getInitCommand(pm), { cwd: root, stdio: 'ignore' });
 
-  // Update package.json with project name
+  // Update package.json
   const pkgPath = path.join(root, 'package.json');
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
   pkg.name = packageName;
+  pkg.type = 'module';
+  pkg.scripts = {
+    start: 'tsx watch ./src/index.ts',
+  };
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+
+  // Install dependencies
+  console.log('\nInstalling dependencies...');
+  const deps = ['tsx', 'typescript', '@types/node'];
+  try {
+    execSync(getAddCommand(pm, deps), { cwd: root, stdio: 'inherit' });
+  } catch {
+    console.log(`\nFailed to install dependencies.`);
+    process.exit(1);
+  }
+
+  // Create tsconfig.json
+  fs.writeFileSync(
+    path.join(root, 'tsconfig.json'),
+    JSON.stringify(tsconfig, null, 2) + '\n'
+  );
+
+  // Create src/index.ts
+  fs.mkdirSync(path.join(root, 'src'));
+  fs.writeFileSync(
+    path.join(root, 'src', 'index.ts'),
+    `console.log('Hello, world!');\n`
+  );
 
   // Initialize git
   console.log('\nInitializing git repository...');
   try {
     execSync('git init', { cwd: root, stdio: 'ignore' });
-
-    // Create .gitignore
     fs.writeFileSync(
       path.join(root, '.gitignore'),
       'node_modules\ndist\n.DS_Store\n'
     );
-
     console.log('Git repository initialized.');
   } catch {
     console.log('Could not initialize git repository.');
-  }
-
-  // Install dependencies
-  const pm = detectPackageManager();
-  const installCmd = getInstallCommand(pm);
-
-  console.log(`\nInstalling dependencies with ${pm}...`);
-  try {
-    execSync(installCmd, { cwd: root, stdio: 'inherit' });
-  } catch {
-    console.log(`\nFailed to install dependencies. Run "${installCmd}" manually.`);
   }
 
   // Done

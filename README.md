@@ -26,10 +26,12 @@ npm create ts-new
 
 The generated project includes:
 
-- TypeScript 5.x with strict configuration
+- TypeScript with strict configuration (latest version)
 - [tsx](https://github.com/privatenumber/tsx) for running TypeScript with watch mode
 - ESM modules configured
 - Git repository initialized with `.gitignore`
+
+Dependencies are always installed at their latest versions.
 
 ## Project Structure
 
