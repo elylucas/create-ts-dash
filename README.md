@@ -28,21 +28,22 @@ npm create ts-new
 |------|-------------|
 | `-y, --yes` | Skip all prompts and use defaults |
 | `-e, --express` | Include Express.js with a basic server setup |
+| `-l, --lint` | Include ESLint and Prettier with sensible defaults |
 
 ### Examples
 
 ```bash
-# Interactive mode - prompts for project name and options
+# Interactive mode - prompts for project name and features
 npm create ts-new
 
 # Create a project with defaults (no prompts)
 npm create ts-new my-app -y
 
-# Create an Express project
-npm create ts-new my-api --express
+# Create an Express project with linting
+npm create ts-new my-api --express --lint
 
-# Create an Express project with no prompts
-npm create ts-new my-api -e -y
+# Create a project with all features, no prompts
+npm create ts-new my-api -e -l -y
 ```
 
 ## What's Included
@@ -53,7 +54,14 @@ The generated project includes:
 - [tsx](https://github.com/privatenumber/tsx) for running TypeScript with watch mode
 - ESM modules configured
 - Git repository initialized with `.gitignore`
-- Optional: Express.js with a basic server setup
+
+### Optional Features
+
+- **Express** - Basic Express.js server setup
+- **ESLint + Prettier** - Linting and formatting with:
+  - TypeScript ESLint recommended rules
+  - Prettier integration
+  - Sensible defaults (unused vars with `_` prefix allowed, consistent type imports)
 
 Dependencies are always installed at their latest versions.
 
@@ -62,11 +70,22 @@ Dependencies are always installed at their latest versions.
 ```
 my-app/
 ├── src/
-│   └── index.ts      # Entry point
+│   └── index.ts        # Entry point
 ├── package.json
 ├── tsconfig.json
+├── eslint.config.js    # (with --lint)
+├── .prettierrc         # (with --lint)
 └── .gitignore
 ```
+
+## Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `start` | Run with watch mode |
+| `lint` | Run ESLint (with `--lint`) |
+| `lint:fix` | Run ESLint and fix issues (with `--lint`) |
+| `format` | Format code with Prettier (with `--lint`) |
 
 ## Getting Started
 

@@ -7,7 +7,7 @@ import prompts from 'prompts';
 
 type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';
 
-type FeatureKey = 'express';
+type FeatureKey = 'express' | 'lint';
 
 interface Feature {
   label: string;
@@ -22,6 +22,19 @@ const features: Feature[] = [
     value: 'express',
     description: 'Add Express.js server',
     dependencies: ['express', '@types/express'],
+  },
+  {
+    label: 'ESLint + Prettier',
+    value: 'lint',
+    description: 'Add linting and formatting',
+    dependencies: [
+      'eslint',
+      'prettier',
+      '@eslint/js',
+      'typescript-eslint',
+      'eslint-config-prettier',
+      'eslint-plugin-prettier',
+    ],
   },
 ];
 
@@ -41,6 +54,8 @@ function parseArgs(args: string[]): CliArgs {
   for (const arg of args) {
     if (arg === '--express' || arg === '-e') {
       result.features.add('express');
+    } else if (arg === '--lint' || arg === '-l') {
+      result.features.add('lint');
     } else if (arg === '--yes' || arg === '-y') {
       result.yes = true;
     } else if (!arg.startsWith('-')) {
@@ -111,6 +126,44 @@ const tsconfig = {
   },
 };
 
+const eslintConfig = `import eslint from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import prettierConfig from 'eslint-config-prettier';
+import prettierPlugin from 'eslint-plugin-prettier';
+
+export default tseslint.config(
+  eslint.configs.recommended,
+  ...tseslint.configs.recommended,
+  prettierConfig,
+  {
+    plugins: {
+      prettier: prettierPlugin,
+    },
+    rules: {
+      'prettier/prettier': 'error',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+      '@typescript-eslint/consistent-type-imports': 'error',
+      '@typescript-eslint/no-explicit-any': 'warn',
+    },
+  },
+  {
+    ignores: ['dist/', 'node_modules/'],
+  }
+);
+`;
+
+const prettierConfig = `{
+  "semi": true,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "printWidth": 100
+}
+`;
+
 function getIndexTemplate(selectedFeatures: Set<FeatureKey>): string {
   if (selectedFeatures.has('express')) {
     return `import express from 'express';
@@ -130,6 +183,20 @@ app.listen(port, () => {
 
   return `console.log('Hello, world!');
 `;
+}
+
+function getScripts(selectedFeatures: Set<FeatureKey>): Record<string, string> {
+  const scripts: Record<string, string> = {
+    start: 'tsx watch ./src/index.ts',
+  };
+
+  if (selectedFeatures.has('lint')) {
+    scripts.lint = 'eslint src/';
+    scripts['lint:fix'] = 'eslint src/ --fix';
+    scripts.format = 'prettier --write src/';
+  }
+
+  return scripts;
 }
 
 async function main(): Promise<void> {
@@ -225,9 +292,7 @@ async function main(): Promise<void> {
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
   pkg.name = packageName;
   pkg.type = 'module';
-  pkg.scripts = {
-    start: 'tsx watch ./src/index.ts',
-  };
+  pkg.scripts = getScripts(selectedFeatures);
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 
   // Collect dependencies
@@ -259,6 +324,12 @@ async function main(): Promise<void> {
     path.join(root, 'src', 'index.ts'),
     getIndexTemplate(selectedFeatures)
   );
+
+  // Create ESLint and Prettier configs if lint feature is selected
+  if (selectedFeatures.has('lint')) {
+    fs.writeFileSync(path.join(root, 'eslint.config.js'), eslintConfig);
+    fs.writeFileSync(path.join(root, '.prettierrc'), prettierConfig);
+  }
 
   // Initialize git
   console.log('\nInitializing git repository...');
