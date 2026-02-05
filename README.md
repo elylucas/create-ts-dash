@@ -22,6 +22,29 @@ You can also run without a project name to be prompted interactively:
 npm create ts-new
 ```
 
+## Options
+
+| Flag | Description |
+|------|-------------|
+| `-y, --yes` | Skip all prompts and use defaults |
+| `-e, --express` | Include Express.js with a basic server setup |
+
+### Examples
+
+```bash
+# Interactive mode - prompts for project name and options
+npm create ts-new
+
+# Create a project with defaults (no prompts)
+npm create ts-new my-app -y
+
+# Create an Express project
+npm create ts-new my-api --express
+
+# Create an Express project with no prompts
+npm create ts-new my-api -e -y
+```
+
 ## What's Included
 
 The generated project includes:
@@ -30,6 +53,7 @@ The generated project includes:
 - [tsx](https://github.com/privatenumber/tsx) for running TypeScript with watch mode
 - ESM modules configured
 - Git repository initialized with `.gitignore`
+- Optional: Express.js with a basic server setup
 
 Dependencies are always installed at their latest versions.
 

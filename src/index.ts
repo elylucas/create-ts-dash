@@ -7,6 +7,50 @@ import prompts from 'prompts';
 
 type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';
 
+type FeatureKey = 'express';
+
+interface Feature {
+  label: string;
+  value: FeatureKey;
+  description: string;
+  dependencies: string[];
+}
+
+const features: Feature[] = [
+  {
+    label: 'Express',
+    value: 'express',
+    description: 'Add Express.js server',
+    dependencies: ['express', '@types/express'],
+  },
+];
+
+interface CliArgs {
+  projectName?: string;
+  features: Set<FeatureKey>;
+  yes: boolean;
+}
+
+function parseArgs(args: string[]): CliArgs {
+  const result: CliArgs = {
+    projectName: undefined,
+    features: new Set(),
+    yes: false,
+  };
+
+  for (const arg of args) {
+    if (arg === '--express' || arg === '-e') {
+      result.features.add('express');
+    } else if (arg === '--yes' || arg === '-y') {
+      result.yes = true;
+    } else if (!arg.startsWith('-')) {
+      result.projectName = arg;
+    }
+  }
+
+  return result;
+}
+
 function detectPackageManager(): PackageManager {
   const userAgent = process.env.npm_config_user_agent;
 
@@ -67,26 +111,74 @@ const tsconfig = {
   },
 };
 
+function getIndexTemplate(selectedFeatures: Set<FeatureKey>): string {
+  if (selectedFeatures.has('express')) {
+    return `import express from 'express';
+
+const app = express();
+const port = 3000;
+
+app.get('/', (req, res) => {
+  res.send('Hello, world!');
+});
+
+app.listen(port, () => {
+  console.log(\`Server running at http://localhost:\${port}\`);
+});
+`;
+  }
+
+  return `console.log('Hello, world!');
+`;
+}
+
 async function main(): Promise<void> {
-  const args = process.argv.slice(2);
-  let projectName = args[0];
+  const cliArgs = parseArgs(process.argv.slice(2));
+  let { projectName, features: selectedFeatures, yes: skipPrompts } = cliArgs;
+
+  const onCancel = () => {
+    console.log('\nOperation cancelled.');
+    process.exit(0);
+  };
 
   if (!projectName) {
+    if (skipPrompts) {
+      projectName = 'ts-project';
+    } else {
+      const response = await prompts(
+        {
+          type: 'text',
+          name: 'projectName',
+          message: 'Project name:',
+          initial: 'ts-project',
+        },
+        { onCancel }
+      );
+      projectName = response.projectName;
+    }
+  }
+
+  if (!skipPrompts && selectedFeatures.size === 0) {
     const response = await prompts(
       {
-        type: 'text',
-        name: 'projectName',
-        message: 'Project name:',
-        initial: 'ts-project',
+        type: 'multiselect',
+        name: 'features',
+        message: 'Select features:',
+        choices: features.map((f) => ({
+          title: f.label,
+          value: f.value,
+          description: f.description,
+        })),
+        hint: '- Space to select. Return to submit',
       },
-      {
-        onCancel: () => {
-          console.log('\nOperation cancelled.');
-          process.exit(0);
-        },
-      }
+      { onCancel }
     );
-    projectName = response.projectName;
+    selectedFeatures = new Set(response.features as FeatureKey[]);
+  }
+
+  if (!projectName) {
+    console.log('Project name is required.');
+    process.exit(1);
   }
 
   const packageName = toValidPackageName(projectName);
@@ -95,6 +187,11 @@ async function main(): Promise<void> {
   if (fs.existsSync(root)) {
     const files = fs.readdirSync(root);
     if (files.length > 0) {
+      if (skipPrompts) {
+        console.log(`Directory "${projectName}" is not empty. Aborting.`);
+        process.exit(1);
+      }
+
       const { overwrite } = await prompts({
         type: 'confirm',
         name: 'overwrite',
@@ -133,9 +230,16 @@ async function main(): Promise<void> {
   };
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 
+  // Collect dependencies
+  const deps = ['tsx', 'typescript', '@types/node'];
+  for (const feature of features) {
+    if (selectedFeatures.has(feature.value)) {
+      deps.push(...feature.dependencies);
+    }
+  }
+
   // Install dependencies
   console.log('\nInstalling dependencies...');
-  const deps = ['tsx', 'typescript', '@types/node'];
   try {
     execSync(getAddCommand(pm, deps), { cwd: root, stdio: 'inherit' });
   } catch {
@@ -153,7 +257,7 @@ async function main(): Promise<void> {
   fs.mkdirSync(path.join(root, 'src'));
   fs.writeFileSync(
     path.join(root, 'src', 'index.ts'),
-    `console.log('Hello, world!');\n`
+    getIndexTemplate(selectedFeatures)
   );
 
   // Initialize git
