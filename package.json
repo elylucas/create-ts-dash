@@ -1,0 +1,40 @@
+{
+  "name": "create-ts-new",
+  "version": "1.0.0",
+  "description": "Create a new minimal TypeScript project",
+  "type": "module",
+  "bin": {
+    "create-ts-new": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "template",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "create",
+    "typescript",
+    "template",
+    "starter",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/prompts": "^2.4.9",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "prompts": "^2.4.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
