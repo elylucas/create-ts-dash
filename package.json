@@ -1,6 +1,6 @@
 {
   "name": "create-ts-new",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Create a new minimal TypeScript project",
   "type": "module",
   "bin": {
@@ -14,8 +14,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "prepublishOnly": "npm run build",
-    "test": "echo 'no tests yet'"
+    "test": "echo 'No tests specified'"
   },
   "keywords": [
     "create",
@@ -29,6 +28,7 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "@types/prompts": "^2.4.9",
+    "semantic-release": "^19.0.5",
     "typescript": "^5.9.3"
   },
   "dependencies": {
