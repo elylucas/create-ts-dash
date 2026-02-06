@@ -7,7 +7,7 @@ Scaffold a new minimal TypeScript project with a single command.
 ```bash
 npm create ts-dash my-app
 ```
-
+ 
 Or with other package managers:
 
 ```bash
