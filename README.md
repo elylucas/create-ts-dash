@@ -29,6 +29,7 @@ npm create ts-new
 | `-y, --yes` | Skip all prompts and use defaults |
 | `-e, --express` | Include Express.js with a basic server setup |
 | `-l, --lint` | Include ESLint and Prettier with sensible defaults |
+| `-t, --vitest` | Include Vitest for testing |
 
 ### Examples
 
@@ -43,7 +44,7 @@ npm create ts-new my-app -y
 npm create ts-new my-api --express --lint
 
 # Create a project with all features, no prompts
-npm create ts-new my-api -e -l -y
+npm create ts-new my-api -e -l -t -y
 ```
 
 ## What's Included
@@ -62,6 +63,7 @@ The generated project includes:
   - TypeScript ESLint recommended rules
   - Prettier integration
   - Sensible defaults (unused vars with `_` prefix allowed, consistent type imports)
+- **Vitest** - Fast unit testing with an example test file
 
 Dependencies are always installed at their latest versions.
 
@@ -70,7 +72,8 @@ Dependencies are always installed at their latest versions.
 ```
 my-app/
 ├── src/
-│   └── index.ts        # Entry point
+│   ├── index.ts        # Entry point
+│   └── example.test.ts # (with --vitest)
 ├── package.json
 ├── tsconfig.json
 ├── eslint.config.js    # (with --lint)
@@ -86,6 +89,8 @@ my-app/
 | `lint` | Run ESLint (with `--lint`) |
 | `lint:fix` | Run ESLint and fix issues (with `--lint`) |
 | `format` | Format code with Prettier (with `--lint`) |
+| `test` | Run Vitest in watch mode (with `--vitest`) |
+| `test:run` | Run Vitest once (with `--vitest`) |
 
 ## Getting Started
 

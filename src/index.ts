@@ -7,7 +7,7 @@ import prompts from 'prompts';
 
 type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';
 
-type FeatureKey = 'express' | 'lint';
+type FeatureKey = 'express' | 'lint' | 'vitest';
 
 interface Feature {
   label: string;
@@ -36,6 +36,12 @@ const features: Feature[] = [
       'eslint-plugin-prettier',
     ],
   },
+  {
+    label: 'Vitest',
+    value: 'vitest',
+    description: 'Add Vitest for testing',
+    dependencies: ['vitest'],
+  },
 ];
 
 interface CliArgs {
@@ -56,6 +62,8 @@ function parseArgs(args: string[]): CliArgs {
       result.features.add('express');
     } else if (arg === '--lint' || arg === '-l') {
       result.features.add('lint');
+    } else if (arg === '--vitest' || arg === '-t') {
+      result.features.add('vitest');
     } else if (arg === '--yes' || arg === '-y') {
       result.yes = true;
     } else if (!arg.startsWith('-')) {
@@ -196,8 +204,30 @@ function getScripts(selectedFeatures: Set<FeatureKey>): Record<string, string> {
     scripts.format = 'prettier --write src/';
   }
 
+  if (selectedFeatures.has('vitest')) {
+    scripts.test = 'vitest';
+    scripts['test:run'] = 'vitest run';
+  }
+
   return scripts;
 }
+
+const vitestExample = `import { describe, it, expect } from 'vitest';
+
+function sum(a: number, b: number): number {
+  return a + b;
+}
+
+describe('sum', () => {
+  it('adds two numbers', () => {
+    expect(sum(1, 2)).toBe(3);
+  });
+
+  it('handles negative numbers', () => {
+    expect(sum(-1, 1)).toBe(0);
+  });
+});
+`;
 
 async function main(): Promise<void> {
   const cliArgs = parseArgs(process.argv.slice(2));
@@ -329,6 +359,11 @@ async function main(): Promise<void> {
   if (selectedFeatures.has('lint')) {
     fs.writeFileSync(path.join(root, 'eslint.config.js'), eslintConfig);
     fs.writeFileSync(path.join(root, '.prettierrc'), prettierConfig);
+  }
+
+  // Create example test file if vitest is selected
+  if (selectedFeatures.has('vitest')) {
+    fs.writeFileSync(path.join(root, 'src', 'example.test.ts'), vitestExample);
   }
 
   // Initialize git
