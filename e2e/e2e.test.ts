@@ -37,11 +37,7 @@ function httpGet(url: string): Promise<{ status: number; body: string }> {
   });
 }
 
-function waitForServer(
-  child: ChildProcess,
-  port: number,
-  timeoutMs = 30_000
-): Promise<void> {
+function waitForServer(child: ChildProcess, port: number, timeoutMs = 30_000): Promise<void> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject(new Error(`Server did not start within ${timeoutMs}ms`));
@@ -152,18 +148,12 @@ describe('E2E: CLI project scaffolding', () => {
     });
 
     it('creates src/index.ts with default template', () => {
-      const content = fs.readFileSync(
-        path.join(tmpDir, projectName, 'src', 'index.ts'),
-        'utf-8'
-      );
+      const content = fs.readFileSync(path.join(tmpDir, projectName, 'src', 'index.ts'), 'utf-8');
       expect(content).toContain("console.log('Hello, world!')");
     });
 
     it('creates .gitignore', () => {
-      const content = fs.readFileSync(
-        path.join(tmpDir, projectName, '.gitignore'),
-        'utf-8'
-      );
+      const content = fs.readFileSync(path.join(tmpDir, projectName, '.gitignore'), 'utf-8');
       expect(content).toContain('node_modules');
       expect(content).toContain('dist');
     });
@@ -173,18 +163,12 @@ describe('E2E: CLI project scaffolding', () => {
     });
 
     it('does not create lint config files', () => {
-      expect(
-        fs.existsSync(path.join(tmpDir, projectName, 'eslint.config.js'))
-      ).toBe(false);
-      expect(
-        fs.existsSync(path.join(tmpDir, projectName, '.prettierrc'))
-      ).toBe(false);
+      expect(fs.existsSync(path.join(tmpDir, projectName, 'eslint.config.js'))).toBe(false);
+      expect(fs.existsSync(path.join(tmpDir, projectName, '.prettierrc'))).toBe(false);
     });
 
     it('does not create test files', () => {
-      expect(
-        fs.existsSync(path.join(tmpDir, projectName, 'src', 'example.test.ts'))
-      ).toBe(false);
+      expect(fs.existsSync(path.join(tmpDir, projectName, 'src', 'example.test.ts'))).toBe(false);
     });
 
     it('builds successfully', () => {
@@ -224,10 +208,7 @@ describe('E2E: CLI project scaffolding', () => {
     });
 
     it('creates src/index.ts with express template', () => {
-      const content = fs.readFileSync(
-        path.join(tmpDir, projectName, 'src', 'index.ts'),
-        'utf-8'
-      );
+      const content = fs.readFileSync(path.join(tmpDir, projectName, 'src', 'index.ts'), 'utf-8');
       expect(content).toContain("import express from 'express'");
     });
 
@@ -276,10 +257,7 @@ describe('E2E: CLI project scaffolding', () => {
     });
 
     it('creates src/index.ts with fastify template', () => {
-      const content = fs.readFileSync(
-        path.join(tmpDir, projectName, 'src', 'index.ts'),
-        'utf-8'
-      );
+      const content = fs.readFileSync(path.join(tmpDir, projectName, 'src', 'index.ts'), 'utf-8');
       expect(content).toContain("import Fastify from 'fastify'");
     });
 
@@ -329,12 +307,9 @@ describe('E2E: CLI project scaffolding', () => {
     });
 
     it('creates src/index.ts with hono template', () => {
-      const content = fs.readFileSync(
-        path.join(tmpDir, projectName, 'src', 'index.ts'),
-        'utf-8'
-      );
+      const content = fs.readFileSync(path.join(tmpDir, projectName, 'src', 'index.ts'), 'utf-8');
       expect(content).toContain("import { Hono } from 'hono'");
-      expect(content).toContain("@hono/node-server");
+      expect(content).toContain('@hono/node-server');
     });
 
     it('installs hono dependencies', () => {
@@ -392,19 +367,13 @@ describe('E2E: CLI project scaffolding', () => {
     });
 
     it('creates eslint.config.js', () => {
-      const content = fs.readFileSync(
-        path.join(tmpDir, projectName, 'eslint.config.js'),
-        'utf-8'
-      );
+      const content = fs.readFileSync(path.join(tmpDir, projectName, 'eslint.config.js'), 'utf-8');
       expect(content).toContain('typescript-eslint');
       expect(content).toContain('eslint-config-prettier');
     });
 
     it('creates .prettierrc', () => {
-      const content = fs.readFileSync(
-        path.join(tmpDir, projectName, '.prettierrc'),
-        'utf-8'
-      );
+      const content = fs.readFileSync(path.join(tmpDir, projectName, '.prettierrc'), 'utf-8');
       const config = JSON.parse(content);
       expect(config.semi).toBe(true);
       expect(config.singleQuote).toBe(true);
@@ -454,25 +423,16 @@ describe('E2E: CLI project scaffolding', () => {
     });
 
     it('creates example.test.ts', () => {
-      expect(
-        fs.existsSync(path.join(tmpDir, projectName, 'src', 'example.test.ts'))
-      ).toBe(true);
+      expect(fs.existsSync(path.join(tmpDir, projectName, 'src', 'example.test.ts'))).toBe(true);
     });
 
     it('does not create lint config files', () => {
-      expect(
-        fs.existsSync(path.join(tmpDir, projectName, 'eslint.config.js'))
-      ).toBe(false);
-      expect(
-        fs.existsSync(path.join(tmpDir, projectName, '.prettierrc'))
-      ).toBe(false);
+      expect(fs.existsSync(path.join(tmpDir, projectName, 'eslint.config.js'))).toBe(false);
+      expect(fs.existsSync(path.join(tmpDir, projectName, '.prettierrc'))).toBe(false);
     });
 
     it('creates src/index.ts with fastify template', () => {
-      const content = fs.readFileSync(
-        path.join(tmpDir, projectName, 'src', 'index.ts'),
-        'utf-8'
-      );
+      const content = fs.readFileSync(path.join(tmpDir, projectName, 'src', 'index.ts'), 'utf-8');
       expect(content).toContain("import Fastify from 'fastify'");
     });
   });
@@ -503,29 +463,20 @@ describe('E2E: CLI project scaffolding', () => {
     });
 
     it('creates eslint.config.js', () => {
-      expect(
-        fs.existsSync(path.join(tmpDir, projectName, 'eslint.config.js'))
-      ).toBe(true);
+      expect(fs.existsSync(path.join(tmpDir, projectName, 'eslint.config.js'))).toBe(true);
     });
 
     it('creates .prettierrc', () => {
-      expect(
-        fs.existsSync(path.join(tmpDir, projectName, '.prettierrc'))
-      ).toBe(true);
+      expect(fs.existsSync(path.join(tmpDir, projectName, '.prettierrc'))).toBe(true);
     });
 
     it('creates src/index.ts with default template', () => {
-      const content = fs.readFileSync(
-        path.join(tmpDir, projectName, 'src', 'index.ts'),
-        'utf-8'
-      );
+      const content = fs.readFileSync(path.join(tmpDir, projectName, 'src', 'index.ts'), 'utf-8');
       expect(content).toContain("console.log('Hello, world!')");
     });
 
     it('does not create test files', () => {
-      expect(
-        fs.existsSync(path.join(tmpDir, projectName, 'src', 'example.test.ts'))
-      ).toBe(false);
+      expect(fs.existsSync(path.join(tmpDir, projectName, 'src', 'example.test.ts'))).toBe(false);
     });
 
     it('builds successfully', () => {

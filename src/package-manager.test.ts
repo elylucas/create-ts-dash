@@ -1,9 +1,5 @@
 import { describe, it, expect, afterEach } from 'vitest';
-import {
-  detectPackageManager,
-  getInitCommand,
-  getAddCommand,
-} from './package-manager.js';
+import { detectPackageManager, getInitCommand, getAddCommand } from './package-manager.js';
 
 describe('detectPackageManager', () => {
   const originalUserAgent = process.env.npm_config_user_agent;
