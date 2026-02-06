@@ -14,7 +14,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "echo 'no tests yet'"
   },
   "keywords": [
     "create",
