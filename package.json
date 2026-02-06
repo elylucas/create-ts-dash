@@ -23,12 +23,13 @@
     "starter",
     "cli"
   ],
-  "author": "",
+  "author": "Ely Lucas <ely@meta-tek.net>",
   "license": "MIT",
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
     "@types/node": "^22.0.0",
     "@types/prompts": "^2.4.9",
-    "semantic-release": "^19.0.5",
+    "semantic-release": "^25.0.3",
     "typescript": "^5.9.3"
   },
   "dependencies": {
@@ -36,5 +37,20 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elylucas/create-ts-dash"
+  },
+  "release": {
+    "branches": [
+      "main"
+    ],
+    "plugins": [
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/changelog",
+      "@semantic-release/npm",
+      "@semantic-release/github"
+    ]
   }
 }
