@@ -214,6 +214,8 @@ const tsconfig = {
   compilerOptions: {
     module: 'es2022',
     target: 'esnext',
+    outDir: './dist',
+    rootDir: './src',
     moduleResolution: 'bundler',
     types: ['node'],
     sourceMap: true,
@@ -304,6 +306,7 @@ function getScripts(
 ): Record<string, string> {
   const scripts: Record<string, string> = {
     start: 'tsx watch ./src/index.ts',
+    build: 'rimraf ./dist && tsc',
   };
 
   if (server) {
@@ -444,7 +447,7 @@ async function main(): Promise<void> {
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 
   // Collect dependencies
-  const deps = ['tsx', 'typescript', '@types/node'];
+  const deps = ['tsx', 'typescript', '@types/node', 'rimraf'];
 
   if (selectedServer) {
     const serverConfig = servers.find((s) => s.value === selectedServer);
