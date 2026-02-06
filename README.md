@@ -1,25 +1,25 @@
-# create-ts-new
+# create-ts-dash
 
 Scaffold a new minimal TypeScript project with a single command.
 
 ## Usage
 
 ```bash
-npm create ts-new my-app
+npm create ts-dash my-app
 ```
 
 Or with other package managers:
 
 ```bash
-yarn create ts-new my-app
-pnpm create ts-new my-app
-bun create ts-new my-app
+yarn create ts-dash my-app
+pnpm create ts-dash my-app
+bun create ts-dash my-app
 ```
 
 You can also run without a project name to be prompted interactively:
 
 ```bash
-npm create ts-new
+npm create ts-dash
 ```
 
 ## Options
@@ -49,19 +49,19 @@ npm create ts-new
 
 ```bash
 # Interactive mode - prompts for project name, server, and tooling
-npm create ts-new
+npm create ts-dash
 
 # Create a project with defaults (no prompts, no server)
-npm create ts-new my-app -y
+npm create ts-dash my-app -y
 
 # Create an Express project with linting and testing
-npm create ts-new my-api --express --lint --vitest
+npm create ts-dash my-api --express --lint --vitest
 
 # Create a Fastify project with no prompts
-npm create ts-new my-api -f -y
+npm create ts-dash my-api -f -y
 
 # Create a Hono project with all tooling
-npm create ts-new my-api -h -l -t -y
+npm create ts-dash my-api -h -l -t -y
 ```
 
 ## What's Included
