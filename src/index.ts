@@ -329,7 +329,8 @@ function getScripts(
 
 async function main(): Promise<void> {
   const cliArgs = parseArgs(process.argv.slice(2));
-  let { projectName, server: selectedServer, tooling: selectedTooling, yes: skipPrompts } = cliArgs;
+  const { yes: skipPrompts } = cliArgs;
+  let { projectName, server: selectedServer, tooling: selectedTooling } = cliArgs;
 
   const onCancel = () => {
     console.log('\nOperation cancelled.');
@@ -472,10 +473,7 @@ async function main(): Promise<void> {
   }
 
   // Create tsconfig.json
-  fs.writeFileSync(
-    path.join(root, 'tsconfig.json'),
-    JSON.stringify(tsconfig, null, 2) + '\n'
-  );
+  fs.writeFileSync(path.join(root, 'tsconfig.json'), JSON.stringify(tsconfig, null, 2) + '\n');
 
   // Create src/index.ts
   fs.mkdirSync(path.join(root, 'src'));

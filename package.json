@@ -14,6 +14,9 @@
   ],
   "scripts": {
     "build": "tsc",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write src/",
     "test": "echo 'No tests specified'"
   },
   "keywords": [
@@ -26,11 +29,17 @@
   "author": "Ely Lucas <ely@meta-tek.net>",
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^9.0.0",
     "@semantic-release/changelog": "^6.0.3",
     "@types/node": "^22.0.0",
     "@types/prompts": "^2.4.9",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^10.0.0",
+    "eslint-plugin-prettier": "^5.0.0",
+    "prettier": "^3.0.0",
     "semantic-release": "^25.0.3",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.0.0"
   },
   "dependencies": {
     "prompts": "^2.4.2"
