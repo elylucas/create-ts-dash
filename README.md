@@ -24,27 +24,44 @@ npm create ts-new
 
 ## Options
 
+### Web Servers (pick one)
+
+| Flag | Description |
+|------|-------------|
+| `-e, --express` | Express - Fast, unopinionated, minimalist web framework |
+| `-f, --fastify` | Fastify - Fast and low overhead web framework |
+| `-h, --hono` | Hono - Lightweight, ultrafast web framework |
+
+### Tooling (pick any)
+
+| Flag | Description |
+|------|-------------|
+| `-l, --lint` | ESLint + Prettier with sensible defaults |
+| `-t, --vitest` | Vitest for testing |
+
+### Other
+
 | Flag | Description |
 |------|-------------|
 | `-y, --yes` | Skip all prompts and use defaults |
-| `-e, --express` | Include Express.js with a basic server setup |
-| `-l, --lint` | Include ESLint and Prettier with sensible defaults |
-| `-t, --vitest` | Include Vitest for testing |
 
 ### Examples
 
 ```bash
-# Interactive mode - prompts for project name and features
+# Interactive mode - prompts for project name, server, and tooling
 npm create ts-new
 
-# Create a project with defaults (no prompts)
+# Create a project with defaults (no prompts, no server)
 npm create ts-new my-app -y
 
-# Create an Express project with linting
-npm create ts-new my-api --express --lint
+# Create an Express project with linting and testing
+npm create ts-new my-api --express --lint --vitest
 
-# Create a project with all features, no prompts
-npm create ts-new my-api -e -l -t -y
+# Create a Fastify project with no prompts
+npm create ts-new my-api -f -y
+
+# Create a Hono project with all tooling
+npm create ts-new my-api -h -l -t -y
 ```
 
 ## What's Included
@@ -56,9 +73,14 @@ The generated project includes:
 - ESM modules configured
 - Git repository initialized with `.gitignore`
 
-### Optional Features
+### Web Servers
 
-- **Express** - Basic Express.js server setup
+- **Express** - The classic Node.js web framework
+- **Fastify** - High performance with built-in JSON schema validation
+- **Hono** - Ultrafast, works on edge runtimes too
+
+### Tooling
+
 - **ESLint + Prettier** - Linting and formatting with:
   - TypeScript ESLint recommended rules
   - Prettier integration
@@ -86,6 +108,7 @@ my-app/
 | Script | Description |
 |--------|-------------|
 | `start` | Run with watch mode |
+| `dev` | Run with watch mode (with web server) |
 | `lint` | Run ESLint (with `--lint`) |
 | `lint:fix` | Run ESLint and fix issues (with `--lint`) |
 | `format` | Format code with Prettier (with `--lint`) |

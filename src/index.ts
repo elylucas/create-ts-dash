@@ -7,22 +7,91 @@ import prompts from 'prompts';
 
 type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';
 
-type FeatureKey = 'express' | 'lint' | 'vitest';
+type ServerKey = 'express' | 'fastify' | 'hono';
+type ToolingKey = 'lint' | 'vitest';
 
-interface Feature {
+interface ServerOption {
   label: string;
-  value: FeatureKey;
+  value: ServerKey;
+  description: string;
+  dependencies: string[];
+  template: string;
+}
+
+interface ToolingOption {
+  label: string;
+  value: ToolingKey;
   description: string;
   dependencies: string[];
 }
 
-const features: Feature[] = [
+const servers: ServerOption[] = [
   {
     label: 'Express',
     value: 'express',
-    description: 'Add Express.js server',
+    description: 'Fast, unopinionated, minimalist web framework',
     dependencies: ['express', '@types/express'],
+    template: `import express from 'express';
+
+const app = express();
+const port = 3000;
+
+app.get('/', (req, res) => {
+  res.send('Hello, world!');
+});
+
+app.listen(port, () => {
+  console.log(\`Server running at http://localhost:\${port}\`);
+});
+`,
   },
+  {
+    label: 'Fastify',
+    value: 'fastify',
+    description: 'Fast and low overhead web framework',
+    dependencies: ['fastify'],
+    template: `import Fastify from 'fastify';
+
+const fastify = Fastify({ logger: true });
+
+fastify.get('/', async () => {
+  return { hello: 'world' };
+});
+
+const start = async () => {
+  try {
+    await fastify.listen({ port: 3000 });
+  } catch (err) {
+    fastify.log.error(err);
+    process.exit(1);
+  }
+};
+
+start();
+`,
+  },
+  {
+    label: 'Hono',
+    value: 'hono',
+    description: 'Lightweight, ultrafast web framework',
+    dependencies: ['hono', '@hono/node-server'],
+    template: `import { Hono } from 'hono';
+import { serve } from '@hono/node-server';
+
+const app = new Hono();
+
+app.get('/', (c) => {
+  return c.text('Hello, world!');
+});
+
+serve({ fetch: app.fetch, port: 3000 }, (info) => {
+  console.log(\`Server running at http://localhost:\${info.port}\`);
+});
+`,
+  },
+];
+
+const tooling: ToolingOption[] = [
   {
     label: 'ESLint + Prettier',
     value: 'lint',
@@ -46,29 +115,48 @@ const features: Feature[] = [
 
 interface CliArgs {
   projectName?: string;
-  features: Set<FeatureKey>;
+  server?: ServerKey;
+  tooling: Set<ToolingKey>;
   yes: boolean;
 }
 
 function parseArgs(args: string[]): CliArgs {
   const result: CliArgs = {
     projectName: undefined,
-    features: new Set(),
+    server: undefined,
+    tooling: new Set(),
     yes: false,
   };
 
+  const serverFlags: ServerKey[] = [];
+
   for (const arg of args) {
     if (arg === '--express' || arg === '-e') {
-      result.features.add('express');
+      serverFlags.push('express');
+    } else if (arg === '--fastify' || arg === '-f') {
+      serverFlags.push('fastify');
+    } else if (arg === '--hono' || arg === '-h') {
+      serverFlags.push('hono');
     } else if (arg === '--lint' || arg === '-l') {
-      result.features.add('lint');
+      result.tooling.add('lint');
     } else if (arg === '--vitest' || arg === '-t') {
-      result.features.add('vitest');
+      result.tooling.add('vitest');
     } else if (arg === '--yes' || arg === '-y') {
       result.yes = true;
     } else if (!arg.startsWith('-')) {
       result.projectName = arg;
     }
+  }
+
+  if (serverFlags.length > 1) {
+    console.error(
+      `Error: Cannot select multiple web servers. You specified: ${serverFlags.join(', ')}`
+    );
+    process.exit(1);
+  }
+
+  if (serverFlags.length === 1) {
+    result.server = serverFlags[0];
   }
 
   return result;
@@ -88,20 +176,28 @@ function detectPackageManager(): PackageManager {
 
 function getInitCommand(pm: PackageManager): string {
   switch (pm) {
-    case 'yarn': return 'yarn init -y';
-    case 'pnpm': return 'pnpm init';
-    case 'bun': return 'bun init -y';
-    default: return 'npm init -y';
+    case 'yarn':
+      return 'yarn init -y';
+    case 'pnpm':
+      return 'pnpm init';
+    case 'bun':
+      return 'bun init -y';
+    default:
+      return 'npm init -y';
   }
 }
 
 function getAddCommand(pm: PackageManager, deps: string[]): string {
   const depsStr = deps.join(' ');
   switch (pm) {
-    case 'yarn': return `yarn add ${depsStr}`;
-    case 'pnpm': return `pnpm add ${depsStr}`;
-    case 'bun': return `bun add ${depsStr}`;
-    default: return `npm install ${depsStr}`;
+    case 'yarn':
+      return `yarn add ${depsStr}`;
+    case 'pnpm':
+      return `pnpm add ${depsStr}`;
+    case 'bun':
+      return `bun add ${depsStr}`;
+    default:
+      return `npm install ${depsStr}`;
   }
 }
 
@@ -163,7 +259,7 @@ export default tseslint.config(
 );
 `;
 
-const prettierConfig = `{
+const prettierConfigFile = `{
   "semi": true,
   "singleQuote": true,
   "tabWidth": 2,
@@ -171,46 +267,6 @@ const prettierConfig = `{
   "printWidth": 100
 }
 `;
-
-function getIndexTemplate(selectedFeatures: Set<FeatureKey>): string {
-  if (selectedFeatures.has('express')) {
-    return `import express from 'express';
-
-const app = express();
-const port = 3000;
-
-app.get('/', (req, res) => {
-  res.send('Hello, world!');
-});
-
-app.listen(port, () => {
-  console.log(\`Server running at http://localhost:\${port}\`);
-});
-`;
-  }
-
-  return `console.log('Hello, world!');
-`;
-}
-
-function getScripts(selectedFeatures: Set<FeatureKey>): Record<string, string> {
-  const scripts: Record<string, string> = {
-    start: 'tsx watch ./src/index.ts',
-  };
-
-  if (selectedFeatures.has('lint')) {
-    scripts.lint = 'eslint src/';
-    scripts['lint:fix'] = 'eslint src/ --fix';
-    scripts.format = 'prettier --write src/';
-  }
-
-  if (selectedFeatures.has('vitest')) {
-    scripts.test = 'vitest';
-    scripts['test:run'] = 'vitest run';
-  }
-
-  return scripts;
-}
 
 const vitestExample = `import { describe, it, expect } from 'vitest';
 
@@ -229,9 +285,48 @@ describe('sum', () => {
 });
 `;
 
+const defaultTemplate = `console.log('Hello, world!');
+`;
+
+function getIndexTemplate(server?: ServerKey): string {
+  if (server) {
+    const serverConfig = servers.find((s) => s.value === server);
+    if (serverConfig) {
+      return serverConfig.template;
+    }
+  }
+  return defaultTemplate;
+}
+
+function getScripts(
+  server: ServerKey | undefined,
+  selectedTooling: Set<ToolingKey>
+): Record<string, string> {
+  const scripts: Record<string, string> = {
+    start: 'tsx watch ./src/index.ts',
+  };
+
+  if (server) {
+    scripts.dev = 'tsx watch ./src/index.ts';
+  }
+
+  if (selectedTooling.has('lint')) {
+    scripts.lint = 'eslint src/';
+    scripts['lint:fix'] = 'eslint src/ --fix';
+    scripts.format = 'prettier --write src/';
+  }
+
+  if (selectedTooling.has('vitest')) {
+    scripts.test = 'vitest';
+    scripts['test:run'] = 'vitest run';
+  }
+
+  return scripts;
+}
+
 async function main(): Promise<void> {
   const cliArgs = parseArgs(process.argv.slice(2));
-  let { projectName, features: selectedFeatures, yes: skipPrompts } = cliArgs;
+  let { projectName, server: selectedServer, tooling: selectedTooling, yes: skipPrompts } = cliArgs;
 
   const onCancel = () => {
     console.log('\nOperation cancelled.');
@@ -255,22 +350,45 @@ async function main(): Promise<void> {
     }
   }
 
-  if (!skipPrompts && selectedFeatures.size === 0) {
+  // Server selection (single select)
+  if (!skipPrompts && selectedServer === undefined) {
+    const response = await prompts(
+      {
+        type: 'select',
+        name: 'server',
+        message: 'Select a web server:',
+        choices: [
+          { title: 'None', value: 'none', description: 'No web server' },
+          ...servers.map((s) => ({
+            title: s.label,
+            value: s.value,
+            description: s.description,
+          })),
+        ],
+        initial: 0,
+      },
+      { onCancel }
+    );
+    selectedServer = response.server === 'none' ? undefined : response.server;
+  }
+
+  // Tooling selection (multi select)
+  if (!skipPrompts && selectedTooling.size === 0) {
     const response = await prompts(
       {
         type: 'multiselect',
-        name: 'features',
-        message: 'Select features:',
-        choices: features.map((f) => ({
-          title: f.label,
-          value: f.value,
-          description: f.description,
+        name: 'tooling',
+        message: 'Select additional tooling:',
+        choices: tooling.map((t) => ({
+          title: t.label,
+          value: t.value,
+          description: t.description,
         })),
         hint: '- Space to select. Return to submit',
       },
       { onCancel }
     );
-    selectedFeatures = new Set(response.features as FeatureKey[]);
+    selectedTooling = new Set(response.tooling as ToolingKey[]);
   }
 
   if (!projectName) {
@@ -322,14 +440,22 @@ async function main(): Promise<void> {
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
   pkg.name = packageName;
   pkg.type = 'module';
-  pkg.scripts = getScripts(selectedFeatures);
+  pkg.scripts = getScripts(selectedServer, selectedTooling);
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 
   // Collect dependencies
   const deps = ['tsx', 'typescript', '@types/node'];
-  for (const feature of features) {
-    if (selectedFeatures.has(feature.value)) {
-      deps.push(...feature.dependencies);
+
+  if (selectedServer) {
+    const serverConfig = servers.find((s) => s.value === selectedServer);
+    if (serverConfig) {
+      deps.push(...serverConfig.dependencies);
+    }
+  }
+
+  for (const tool of tooling) {
+    if (selectedTooling.has(tool.value)) {
+      deps.push(...tool.dependencies);
     }
   }
 
@@ -350,19 +476,16 @@ async function main(): Promise<void> {
 
   // Create src/index.ts
   fs.mkdirSync(path.join(root, 'src'));
-  fs.writeFileSync(
-    path.join(root, 'src', 'index.ts'),
-    getIndexTemplate(selectedFeatures)
-  );
+  fs.writeFileSync(path.join(root, 'src', 'index.ts'), getIndexTemplate(selectedServer));
 
   // Create ESLint and Prettier configs if lint feature is selected
-  if (selectedFeatures.has('lint')) {
+  if (selectedTooling.has('lint')) {
     fs.writeFileSync(path.join(root, 'eslint.config.js'), eslintConfig);
-    fs.writeFileSync(path.join(root, '.prettierrc'), prettierConfig);
+    fs.writeFileSync(path.join(root, '.prettierrc'), prettierConfigFile);
   }
 
   // Create example test file if vitest is selected
-  if (selectedFeatures.has('vitest')) {
+  if (selectedTooling.has('vitest')) {
     fs.writeFileSync(path.join(root, 'src', 'example.test.ts'), vitestExample);
   }
 
@@ -370,10 +493,7 @@ async function main(): Promise<void> {
   console.log('\nInitializing git repository...');
   try {
     execSync('git init', { cwd: root, stdio: 'ignore' });
-    fs.writeFileSync(
-      path.join(root, '.gitignore'),
-      'node_modules\ndist\n.DS_Store\n'
-    );
+    fs.writeFileSync(path.join(root, '.gitignore'), 'node_modules\ndist\n.DS_Store\n');
     console.log('Git repository initialized.');
   } catch {
     console.log('Could not initialize git repository.');
